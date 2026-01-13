@@ -1,12 +1,180 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Teste GitHub Pages</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Jogo</title>
+
+<style>
+body {
+    margin: 0;
+    background: #222;
+    overflow: hidden;
+    font-family: Arial;
+    color: white;
+}
+
+#hud {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+}
+
+#jogador {
+    width: 50px;
+    height: 50px;
+    background: lime;
+    position: absolute;
+    left: 60px;
+    bottom: 60px;
+}
+
+#inimigo {
+    width: 50px;
+    height: 50px;
+    background: red;
+    position: absolute;
+    right: -60px;
+    bottom: 60px;
+}
+
+#msg {
+    position: fixed;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+    font-size: 28px;
+}
+</style>
 </head>
 
-<body style="background:#222; color:white; text-align:center;">
-  <h1>✅ Funcionou!</h1>
-  <p>GitHub Pages está ok 🎉</p>
+<body tabindex="0">
+
+<div id="hud">
+❤️ Vidas: <span id="vidas">3</span><br>
+⭐ Pontos: <span id="pontos">0</span>
+</div>
+
+<div id="msg">Toque ou pressione ESPAÇO</div>
+
+<div id="jogador"></div>
+<div id="inimigo"></div>
+
+<script>
+const jogador = document.getElementById("jogador");
+const inimigo = document.getElementById("inimigo");
+const msg = document.getElementById("msg");
+
+let vidas = 3;
+let pontos = 0;
+let jogando = false;
+
+let x = 60;
+let y = 60;
+let inimigoX = window.innerWidth;
+
+let pulando = false;
+const teclas = {};
+
+document.body.focus();
+
+document.addEventListener("keydown", e => teclas[e.code] = true);
+document.addEventListener("keyup", e => teclas[e.code] = false);
+
+document.addEventListener("keydown", e => {
+    if (e.code === "Space" && !jogando) iniciar();
+});
+
+document.addEventListener("touchstart", () => {
+    if (!jogando) iniciar();
+    else pular();
+});
+
+function iniciar() {
+    vidas = 3;
+    pontos = 0;
+    x = 60;
+    y = 60;
+    inimigoX = window.innerWidth;
+    jogando = true;
+    pulando = false;
+    msg.style.display = "none";
+    atualizarHUD();
+}
+
+function atualizarHUD() {
+    document.getElementById("vidas").innerText = vidas;
+    document.getElementById("pontos").innerText = pontos;
+}
+
+function pular() {
+    if (pulando) return;
+    pulando = true;
+    let altura = 0;
+
+    const subir = setInterval(() => {
+        if (altura < 100) {
+            y += 6;
+            altura += 6;
+        } else {
+            clearInterval(subir);
+            const descer = setInterval(() => {
+                if (altura > 0) {
+                    y -= 6;
+                    altura -= 6;
+                } else {
+                    clearInterval(descer);
+                    pulando = false;
+                }
+            }, 20);
+        }
+    }, 20);
+}
+
+function loop() {
+    if (jogando) {
+        if (teclas["ArrowRight"]) x += 5;
+        if (teclas["ArrowLeft"]) x -= 5;
+        if (teclas["Space"]) pular();
+
+        inimigoX -= 6;
+        if (inimigoX < -60) {
+            inimigoX = window.innerWidth;
+            pontos++;
+            atualizarHUD();
+        }
+
+        jogador.style.left = x + "px";
+        jogador.style.bottom = y + "px";
+        inimigo.style.right = inimigoX + "px";
+
+        const j = jogador.getBoundingClientRect();
+        const i = inimigo.getBoundingClientRect();
+
+        if (
+            j.right > i.left &&
+            j.left < i.right &&
+            j.bottom > i.top &&
+            j.top < i.bottom
+        ) {
+            vidas--;
+            inimigoX = window.innerWidth;
+            atualizarHUD();
+
+            if (vidas <= 0) {
+                jogando = false;
+                msg.innerText = "Game Over 😢\nToque ou pressione ESPAÇO";
+                msg.style.display = "block";
+            }
+        }
+    }
+
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
 </body>
 </html>
